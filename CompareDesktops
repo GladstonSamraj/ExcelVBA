@@ -1,0 +1,89 @@
+Const srcStartRow As Integer = 2
+Const srcDeskNoCol As Integer = 2
+Const srcMonitorCol As Integer = 3
+Const srcDeskPhoneCol As Integer = 3
+Const srcHostnameCol As Integer = 4
+Const oldStartRow As Integer = 3
+Const oldDeskNoCol As Integer = 1
+Const oldDeskPhoneCol As Integer = 5
+Const oldHostnameCol As Integer = 4
+
+Sub CompareDesktop_Click()
+    ' MsgBox "Hi"
+    Dim srcWS As Worksheet
+    Dim oldWS As Worksheet
+    Dim srcLastRow As Long
+    Dim oldLastRow As Long
+    Dim deskNo As Variant
+    Dim matchFound As Boolean
+    
+    ' Set references to the worksheets
+    Set srcWS = ThisWorkbook.Worksheets("Sheet1")
+    Set wb = Workbooks.Open("Source.xlsx")
+    Set oldWS = wb.Sheets("Sheet1")
+    
+    ' Find the last rows in both columns
+    srcLastRow = srcWS.Cells(srcWS.Rows.Count, "A").End(xlUp).Row ' Adjust "A" to the column you want to check in Sheet1
+    oldLastRow = oldWS.Cells(oldWS.Rows.Count, "A").End(xlUp).Row ' Adjust "A" to the column you want to check in Sheet2
+    
+    ' Loop through the values in the second column of Sheet1
+    For srcRow = srcStartRow To srcLastRow ' Assuming data starts in row 2; adjust as needed
+        deskNo = srcWS.Cells(srcRow, srcDeskNoCol).Value ' Assuming you are checking column B; adjust as needed
+        If deskNo <> "" Then
+            matchFound = False
+            
+            ' Loop through the values in the column of Sheet2
+            For oldRow = oldStartRow To oldLastRow ' Assuming data starts in row 3; adjust as needed
+                If deskNo = oldWS.Cells(oldRow, oldDeskNoCol).Value Then ' Assuming you are checking column A in Sheet2; adjust as needed
+                    matchFound = True
+                    validateMonitorSNo srcRow, srcWS, oldRow, oldWS
+                    validateDeskPhone srcRow, srcWS, oldRow, oldWS
+                    validateHostname srcRow, srcWS, oldRow, oldWS
+                    Exit For
+                End If
+            Next oldRow
+            
+            ' Do something based on whether a match was found or not
+            If matchFound Then
+                ' Value was found in Sheet2
+                ' srcWS.Cells(srcRow, 5).Value = "Found" ' You can mark it as "Found" in the fifth column, for example
+            Else
+                ' Value was not found in Sheet2
+                ' srcWS.Cells(srcRow, 5).Value = "Not Found" ' You can mark it as "Not Found" in the fifth column, for example
+            End If
+        End If
+    Next srcRow
+End Sub
+
+Sub validateMonitorSNo(srcRow, srcWS, oldRow, oldWS)
+    Dim monitorNo1 As Variant
+    Dim monitorNo2 As Variant
+    Dim inRange As String
+    monitorNo1 = srcWS.Cells(srcRow, srcMonitorCol).Value
+    monitorNo2 = srcWS.Cells(srcRow + 1, srcMonitorCol).Value
+    ' MsgBox monitorNo1
+    inRange = "B" & oldRow & ":C" & oldRow
+    ' MsgBox inRange
+    If IsError(Application.Match(monitorNo1, oldWS.Range(inRange), 0)) Then
+       srcWS.Cells(srcRow, srcMonitorCol).Interior.ColorIndex = 3
+    End If
+    If IsError(Application.Match(monitorNo2, oldWS.Range(inRange), 0)) Then
+       srcWS.Cells(srcRow + 1, srcMonitorCol).Interior.ColorIndex = 3
+    End If
+End Sub
+
+Sub validateDeskPhone(srcRow, srcWS, oldRow, oldWS)
+    Dim deskPhone As Variant
+    deskPhone = srcWS.Cells(srcRow + 2, srcDeskPhoneCol).Value
+    If deskPhone <> oldWS.Cells(oldRow, oldDeskPhoneCol).Value Then
+        srcWS.Cells(srcRow + 2, srcDeskPhoneCol).Interior.ColorIndex = 3
+    End If
+End Sub
+
+Sub validateHostname(srcRow, srcWS, oldRow, oldWS)
+    Dim hostName As Variant
+    hostName = srcWS.Cells(srcRow + 3, srcHostnameCol).Value
+    If hostName <> oldWS.Cells(oldRow, oldHostnameCol).Value Then
+        srcWS.Cells(srcRow + 3, srcHostnameCol).Interior.ColorIndex = 3
+    End If
+End Sub
